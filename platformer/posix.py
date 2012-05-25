@@ -1,6 +1,6 @@
 """Base support for POSIX-like platforms."""
 
-import py, os
+import py, os, sys
 
 from platformer import Platform, _run_subprocess
 
@@ -32,7 +32,8 @@ class BasePosix(Platform):
 
     def _compile_c_file(self, cc, cfile, compile_args):
         oname = cfile.new(ext='o')
-        args = ['-c'] + compile_args + [str(cfile), '-o', str(oname)]
+        args = ['-m64'] if sys.maxsize > 2**32 else ['-m32']
+        args += ['-c'] + compile_args + [str(cfile), '-o', str(oname)]
         self._execute_c_compiler(cc, args, oname,
                                  cwd=str(cfile.dirpath()))
         return oname
@@ -58,6 +59,7 @@ class BasePosix(Platform):
 
     def _link(self, cc, ofiles, link_args, standalone, exe_name):
         args = [str(ofile) for ofile in ofiles] + link_args
+        args = ['-m64'] if sys.maxsize > 2**32 else ['-m32']
         args += ['-o', str(exe_name)]
         if not standalone:
             args = self._args_for_shared(args)
